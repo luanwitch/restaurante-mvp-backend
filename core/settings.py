@@ -26,7 +26,9 @@ SECRET_KEY = 'django-insecure-rcq@e^wlo03u3+2-dje90-e^jxoems@0(2qfqmcv_%n46wg3qt
 DEBUG = True
 
 ALLOWED_HOSTS = [
+    
     "restaurante-mvp-backend.onrender.com",
+    "restaurante-mvp-backend.vercel.app",
     "localhost",
     "127.0.0.1",
 ]
