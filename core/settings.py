@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'accounts',
     'customers',
     'suppliers',
+    'inventory',
 
       # libs
     'rest_framework',
