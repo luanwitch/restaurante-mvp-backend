@@ -1,10 +1,11 @@
-from django.db.models import Sum
+from django.db.models import Sum, F
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.db.models.functions import TruncDate
 from datetime import timedelta
 from django.utils import timezone
+from inventory.models import Ingredient
 
 from expenses.models import Expense
 from sales.models import Sale, SaleItem
@@ -123,6 +124,11 @@ def dashboard_summary(request):
     today_profit = today_revenue - today_expenses_total
     month_profit = month_revenue - month_expenses_total
 
+    low_stock_count = Ingredient.objects.filter(
+        current_stock__lte=F('minimum_stock'),
+        active=True
+    ).count()
+
     return Response({
         'total_sales': total_sales,
         'total_revenue': total_revenue,
@@ -138,6 +144,12 @@ def dashboard_summary(request):
         'month_revenue': month_revenue,
         'month_expenses': month_expenses_total,
         'month_profit': month_profit,
+
+        'low_stock_count': low_stock_count,
+
+        
+
+
     })
 
 

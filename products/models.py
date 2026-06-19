@@ -24,6 +24,14 @@ class Product(models.Model):
         decimal_places=2
     )
 
+    stock_quantity = models.PositiveBigIntegerField(
+        default=0
+    )
+
+    min_stock = models.PositiveSmallIntegerField(
+        default = 5
+    )
+
     active = models.BooleanField(default=True)
 
     created_at = models.DateTimeField(

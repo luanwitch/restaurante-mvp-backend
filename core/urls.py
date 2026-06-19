@@ -1,7 +1,13 @@
 from django.contrib import admin
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
-from inventory.views import IngredientViewSet
+
+from inventory.views import (
+    IngredientViewSet,
+    ProductIngredientViewSet,
+    StockEntryViewSet,
+    StockMovementViewSet,
+)
 
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -9,6 +15,11 @@ from rest_framework_simplejwt.views import (
 )
 
 router = DefaultRouter()
+
+router.register(r'ingredients', IngredientViewSet, basename='ingredient')
+router.register(r'product-ingredients', ProductIngredientViewSet, basename='product-ingredient')
+router.register(r'stock-movements', StockMovementViewSet, basename='stock-movement')
+router.register(r'stock-entries', StockEntryViewSet, basename='stock-entry')
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -21,6 +32,7 @@ urlpatterns = [
     path("api/", include("customers.urls")),
     path("api/", include("suppliers.urls")),
     path("api/", include("inventory.urls")),
+    path("api/", include("reports.urls")),
 
     path("api/", include(router.urls)),
 

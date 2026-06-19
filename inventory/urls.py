@@ -1,5 +1,5 @@
 from rest_framework.routers import DefaultRouter
-from .views import IngredientViewSet, ProductIngredientViewSet
+from .views import IngredientViewSet, ProductIngredientViewSet, StockEntryViewSet
 
 #Registrando as rotas
 router = DefaultRouter()
@@ -17,6 +17,11 @@ router.register(
     r"recipes",
     ProductIngredientViewSet,
     basename="recipes"
+)
+
+router.register(
+    r'stock-entries',
+    StockEntryViewSet
 )
 
 urlpatterns = router.urls

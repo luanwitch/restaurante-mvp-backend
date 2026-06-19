@@ -56,3 +56,59 @@ class ProductIngredient(models.Model):
     def __str__(self):
             return f"{self.product.name} - {self.ingredient.name}"
 
+class StockEntry(models.Model):
+    ingredient = models.ForeignKey(
+        Ingredient,
+        on_delete=models.CASCADE
+    )
+
+    quantity = models.DecimalField(
+        max_digits=10,
+        decimal_places=3
+    )
+
+    notes = models.CharField(
+        max_length=255,
+        blank=True
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    def __str__(self):
+        return f"{self.ingredient.name} + {self.quantity}"
+
+class StockMovement(models.Model):
+
+    MOVEMENT_TYPES = [
+        ('in', 'Entrada'),
+        ('out', 'Saída'),
+    ]
+
+    ingredient = models.ForeignKey(
+        Ingredient,
+        on_delete=models.CASCADE
+    )
+
+    movement_type = models.CharField(
+        max_length=10,
+        choices=MOVEMENT_TYPES
+    )
+
+    quantity = models.DecimalField(
+        max_digits=10,
+        decimal_places=3
+    )
+
+    notes = models.CharField(
+        max_length=255,
+        blank=True
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    def __str__(self):
+         return f"{self.ingredient.name} - {self.movement_type}"
