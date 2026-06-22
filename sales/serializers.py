@@ -46,20 +46,23 @@ class SaleSerializer(serializers.ModelSerializer):
 
             recipes = ProductIngredient.objects.filter(product=product)
 
+            if not recipes.exists():
+                raise serializers.ValidationError({
+                    "error": f"O produto {product.name} não possui receita cadastrada."
+                })
+
             for recipe in recipes:
                 ingredient = recipe.ingredient
                 required_quantity = recipe.quantity * quantity
 
                 if ingredient.current_stock < required_quantity:
-                    raise serializers.ValidationError(
-                        {
-                            "error": (
-                                f"Estoque insuficiente para {ingredient.name}. "
-                                f"Necessário: {required_quantity}, "
-                                f"Disponível: {ingredient.current_stock}"
-                            )
-                        }
-                    )
+                    raise serializers.ValidationError({
+                        "error": (
+                            f"Estoque insuficiente para {ingredient.name}. "
+                            f"Necessário: {required_quantity}, "
+                            f"Disponível: {ingredient.current_stock}"
+                        )
+                    })
 
         sale = Sale.objects.create(**validated_data)
 

@@ -95,8 +95,11 @@ def sales_report(request):
             "created_at": sale.created_at,
             "items": [
                 {
+                    "id": item.id,
                     "product_name": item.product.name,
                     "quantity": item.quantity,
+                    "unit_price": item.unit_price,
+                    "subtotal": item.subtotal,
                 }
                 for item in sale.items.all()
             ]
