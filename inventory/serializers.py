@@ -9,6 +9,11 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 
 class ProductIngredientSerializer(serializers.ModelSerializer):
+
+    product_name = serializers.CharField(source="product.name", read_only=True)
+    ingredient_name = serializers.CharField(source="ingredient.name", read_only=True)
+    ingredient_unit = serializers.CharField(source="ingredient.unit", read_only = True)
+
     class Meta: 
         model = ProductIngredient
         fields = "__all__"
