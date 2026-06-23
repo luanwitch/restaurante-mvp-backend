@@ -80,14 +80,13 @@ def dashboard_report(request):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def sales_report(request):
-
     sales = Sale.objects.prefetch_related(
         "items__product"
     ).order_by("-created_at")
 
     data = []
 
-    for sale in sales: 
+    for sale in sales:
         data.append({
             "id": sale.id,
             "payment_method": sale.payment_method,
@@ -102,8 +101,7 @@ def sales_report(request):
                     "subtotal": item.subtotal,
                 }
                 for item in sale.items.all()
-            ]
-
+            ],
         })
 
-        return Response(data)
+    return Response(data)
