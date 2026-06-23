@@ -1,25 +1,27 @@
 from rest_framework import serializers
+from django.db import transaction
+
 from .models import Sale, SaleItem
 from inventory.models import ProductIngredient, StockMovement
 
 
 class SaleItemSerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(
-        source='product.name',
+        source="product.name",
         read_only=True
     )
 
     class Meta:
         model = SaleItem
         fields = [
-            'id',
-            'product',
-            'product_name',
-            'quantity',
-            'unit_price',
-            'subtotal',
+            "id",
+            "product",
+            "product_name",
+            "quantity",
+            "unit_price",
+            "subtotal",
         ]
-        read_only_fields = ['unit_price', 'subtotal']
+        read_only_fields = ["unit_price", "subtotal"]
 
 
 class SaleSerializer(serializers.ModelSerializer):
@@ -28,28 +30,29 @@ class SaleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Sale
         fields = [
-            'id',
-            'payment_method',
-            'total',
-            'created_at',
-            'items',
+            "id",
+            "payment_method",
+            "total",
+            "created_at",
+            "items",
         ]
-        read_only_fields = ['total', 'created_at']
+        read_only_fields = ["total", "created_at"]
 
+    @transaction.atomic
     def create(self, validated_data):
-        items_data = validated_data.pop('items')
+        items_data = validated_data.pop("items")
 
-        # Valida estoque antes de criar a venda
+        if not items_data:
+            raise serializers.ValidationError({
+                "error": "A venda precisa ter pelo menos um item."
+            })
+
+        # 1. Valida estoque somente para produtos que possuem receita
         for item_data in items_data:
-            product = item_data['product']
-            quantity = item_data['quantity']
+            product = item_data["product"]
+            quantity = item_data["quantity"]
 
             recipes = ProductIngredient.objects.filter(product=product)
-
-            if not recipes.exists():
-                raise serializers.ValidationError({
-                    "error": f"O produto {product.name} não possui receita cadastrada."
-                })
 
             for recipe in recipes:
                 ingredient = recipe.ingredient
@@ -60,17 +63,18 @@ class SaleSerializer(serializers.ModelSerializer):
                         "error": (
                             f"Estoque insuficiente para {ingredient.name}. "
                             f"Necessário: {required_quantity}, "
-                            f"Disponível: {ingredient.current_stock}"
+                            f"Disponível: {ingredient.current_stock}."
                         )
                     })
 
+        # 2. Cria a venda
         sale = Sale.objects.create(**validated_data)
-
         total = 0
 
+        # 3. Cria os itens da venda e baixa estoque quando existir receita
         for item_data in items_data:
-            product = item_data['product']
-            quantity = item_data['quantity']
+            product = item_data["product"]
+            quantity = item_data["quantity"]
 
             unit_price = product.price
             subtotal = unit_price * quantity
@@ -80,8 +84,10 @@ class SaleSerializer(serializers.ModelSerializer):
                 product=product,
                 quantity=quantity,
                 unit_price=unit_price,
-                subtotal=subtotal
+                subtotal=subtotal,
             )
+
+            total += subtotal
 
             recipes = ProductIngredient.objects.filter(product=product)
 
@@ -89,18 +95,17 @@ class SaleSerializer(serializers.ModelSerializer):
                 ingredient = recipe.ingredient
                 movement_quantity = recipe.quantity * quantity
 
-                ingredient.current_stock -= recipe.quantity * quantity
+                ingredient.current_stock -= movement_quantity
                 ingredient.save()
 
                 StockMovement.objects.create(
                     ingredient=ingredient,
-                    movement_type='out',
+                    movement_type="out",
                     quantity=movement_quantity,
-                    notes=f"Venda do produto {product.name}"
+                    notes=f"Venda do produto {product.name}",
                 )
 
-            total += subtotal
-
+        # 4. Atualiza total da venda
         sale.total = total
         sale.save()
 
