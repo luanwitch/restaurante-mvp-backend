@@ -13,6 +13,19 @@ class ProductIngredientSerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source="product.name", read_only=True)
     ingredient_name = serializers.CharField(source="ingredient.name", read_only=True)
     ingredient_unit = serializers.CharField(source="ingredient.unit", read_only = True)
+    ingredient_cost = serializers.DecimalField(
+        source="ingredient.cost_per_unit",
+        max_digits=10,
+        decimal_places=2,
+        read_only=True
+    )
+
+    product_price = serializers.DecimalField(
+        source="product.price",
+        max_digits=10,
+        decimal_places=2,
+        read_only=True
+    )
 
     class Meta: 
         model = ProductIngredient
