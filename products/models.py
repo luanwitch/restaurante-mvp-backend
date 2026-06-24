@@ -17,7 +17,11 @@ class Product(models.Model):
         related_name='products'
     )
 
-    name = models.CharField(max_length=100)
+    name = models.CharField(
+        max_length=100,
+        unique=True
+    )
+    
 
     price = models.DecimalField(
         max_digits=10,

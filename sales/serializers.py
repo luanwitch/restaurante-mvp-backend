@@ -47,23 +47,32 @@ class SaleSerializer(serializers.ModelSerializer):
                 "error": "A venda precisa ter pelo menos um item."
             })
 
-        # 1. Valida estoque somente para produtos que possuem receita
+        # 1. Valida estoque
         for item_data in items_data:
             product = item_data["product"]
             quantity = item_data["quantity"]
 
             recipes = ProductIngredient.objects.filter(product=product)
 
-            for recipe in recipes:
-                ingredient = recipe.ingredient
-                required_quantity = recipe.quantity * quantity
+            if recipes.exists():
+                for recipe in recipes:
+                    ingredient = recipe.ingredient
+                    required_quantity = recipe.quantity * quantity
 
-                if ingredient.current_stock < required_quantity:
+                    if ingredient.current_stock < required_quantity:
+                        raise serializers.ValidationError({
+                            "error": (
+                                f"Estoque insuficiente para {ingredient.name}. "
+                                f"Necessário: {required_quantity}, "
+                                f"Disponível: {ingredient.current_stock}."
+                            )
+                        })
+            else:
+                if product.stock_quantity < quantity:
                     raise serializers.ValidationError({
                         "error": (
-                            f"Estoque insuficiente para {ingredient.name}. "
-                            f"Necessário: {required_quantity}, "
-                            f"Disponível: {ingredient.current_stock}."
+                            f"Estoque insuficiente para {product.name}. "
+                            f"Disponível: {product.stock_quantity}."
                         )
                     })
 
@@ -71,7 +80,7 @@ class SaleSerializer(serializers.ModelSerializer):
         sale = Sale.objects.create(**validated_data)
         total = 0
 
-        # 3. Cria os itens da venda e baixa estoque quando existir receita
+        # 3. Cria itens e baixa estoque
         for item_data in items_data:
             product = item_data["product"]
             quantity = item_data["quantity"]
@@ -91,21 +100,25 @@ class SaleSerializer(serializers.ModelSerializer):
 
             recipes = ProductIngredient.objects.filter(product=product)
 
-            for recipe in recipes:
-                ingredient = recipe.ingredient
-                movement_quantity = recipe.quantity * quantity
+            if recipes.exists():
+                for recipe in recipes:
+                    ingredient = recipe.ingredient
+                    movement_quantity = recipe.quantity * quantity
 
-                ingredient.current_stock -= movement_quantity
-                ingredient.save()
+                    ingredient.current_stock -= movement_quantity
+                    ingredient.save()
 
-                StockMovement.objects.create(
-                    ingredient=ingredient,
-                    movement_type="out",
-                    quantity=movement_quantity,
-                    notes=f"Venda do produto {product.name}",
-                )
+                    StockMovement.objects.create(
+                        ingredient=ingredient,
+                        movement_type="out",
+                        quantity=movement_quantity,
+                        notes=f"Venda do produto {product.name}",
+                    )
+            else:
+                product.stock_quantity -= quantity
+                product.save()
 
-        # 4. Atualiza total da venda
+        # 4. Atualiza total
         sale.total = total
         sale.save()
 
