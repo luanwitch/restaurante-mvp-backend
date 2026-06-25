@@ -1,8 +1,9 @@
-from django.db.models import Sum
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from sales.models import Sale
+from django.db.models import Sum, F
+from products.models import Product
+
 
 from sales.models import Sale, SaleItem
 from expenses.models import Expense
@@ -12,6 +13,7 @@ from inventory.models import Ingredient, StockMovement
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def dashboard_report(request):
+    print("CHEGUEI NO DASHBOARD NOVO")
     total_sales = Sale.objects.count()
 
     total_revenue = (
@@ -64,6 +66,22 @@ def dashboard_report(request):
         for movement in StockMovement.objects.order_by("-created_at")[:20]
     ]
 
+    low_stock_ingredients_count = Ingredient.objects.filter(
+        current_stock__lte=F("minimum_stock"),
+        active=True
+    ).count()
+
+    low_stock_products_count = Product.objects.filter(
+        stock_quantity__lte=F("min_stock"),
+        active=True
+    ).count()
+
+    low_stock_count = (
+        low_stock_ingredients_count +
+        low_stock_products_count
+    )
+        
+
     return Response({
         "summary": {
             "total_sales": total_sales,
@@ -72,6 +90,7 @@ def dashboard_report(request):
             "net_profit": net_profit,
             "average_ticket": average_ticket,
             "best_seller": best_seller,
+            "low_stock_count": low_stock_count,
         },
         "ingredients": ingredients,
         "movements": movements,

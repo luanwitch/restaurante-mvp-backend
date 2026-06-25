@@ -7,7 +7,9 @@ from datetime import timedelta
 from django.utils import timezone
 from inventory.models import Ingredient
 
+
 from expenses.models import Expense
+from products.models import Product
 from sales.models import Sale, SaleItem
 
 
@@ -124,10 +126,19 @@ def dashboard_summary(request):
     today_profit = today_revenue - today_expenses_total
     month_profit = month_revenue - month_expenses_total
 
-    low_stock_count = Ingredient.objects.filter(
-        current_stock__lte=F('minimum_stock'),
+    low_stock_ingredients_count = Ingredient.objects.filter(
+        current_stock__lte=F("minimum_stock"),
         active=True
     ).count()
+
+    low_stock_products_count = Product.objects.filter(
+        stock_quantity__lte=F("min_stock"),
+        active=True
+    ).count()
+
+    low_stock_count = (
+        low_stock_ingredients_count + low_stock_products_count
+    )
 
     return Response({
         'total_sales': total_sales,
@@ -146,9 +157,6 @@ def dashboard_summary(request):
         'month_profit': month_profit,
 
         'low_stock_count': low_stock_count,
-
-        
-
 
     })
 
