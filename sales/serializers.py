@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.db import transaction
+from products.models import ProductStockMovement
 
 from .models import Sale, SaleItem
 from inventory.models import ProductIngredient, StockMovement
@@ -117,6 +118,13 @@ class SaleSerializer(serializers.ModelSerializer):
             else:
                 product.stock_quantity -= quantity
                 product.save()
+
+                ProductStockMovement.objects.create(
+                    product=product,
+                    movement_type="out",
+                    quantity=quantity,
+                    notes=f"Venda #{sale.id}",
+                )
 
         # 4. Atualiza total
         sale.total = total

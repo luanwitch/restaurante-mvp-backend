@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Category, Product
+from .models import ProductStockMovement
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -27,3 +28,21 @@ class ProductSerializer(serializers.ModelSerializer):
             "active",
             "created_at",
         ]
+
+class ProductStockMovementSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(
+        source="product.name",
+        read_only=True
+    )
+
+    class Meta:
+        model = ProductStockMovement
+        fields = [
+            "id",
+            "product",
+            "product_name",
+            "movement_type",
+            "quantity",
+            "notes",
+            "created_at",
+        ]        
