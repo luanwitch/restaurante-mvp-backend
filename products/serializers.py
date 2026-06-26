@@ -27,6 +27,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "min_stock",
             "active",
             "created_at",
+            "uses_recipe",
         ]
 
 class ProductStockMovementSerializer(serializers.ModelSerializer):

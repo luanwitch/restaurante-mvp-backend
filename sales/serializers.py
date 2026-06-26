@@ -48,14 +48,22 @@ class SaleSerializer(serializers.ModelSerializer):
                 "error": "A venda precisa ter pelo menos um item."
             })
 
-        # 1. Valida estoque
+        # 1. Valida estoque antes de criar a venda
         for item_data in items_data:
             product = item_data["product"]
             quantity = item_data["quantity"]
 
             recipes = ProductIngredient.objects.filter(product=product)
 
-            if recipes.exists():
+            if product.uses_recipe:
+                if not recipes.exists():
+                    raise serializers.ValidationError({
+                        "error": (
+                            f"O produto {product.name} utiliza receita, "
+                            f"mas não possui receita cadastrada."
+                        )
+                    })
+
                 for recipe in recipes:
                     ingredient = recipe.ingredient
                     required_quantity = recipe.quantity * quantity
@@ -101,7 +109,7 @@ class SaleSerializer(serializers.ModelSerializer):
 
             recipes = ProductIngredient.objects.filter(product=product)
 
-            if recipes.exists():
+            if product.uses_recipe:
                 for recipe in recipes:
                     ingredient = recipe.ingredient
                     movement_quantity = recipe.quantity * quantity
@@ -126,7 +134,7 @@ class SaleSerializer(serializers.ModelSerializer):
                     notes=f"Venda #{sale.id}",
                 )
 
-        # 4. Atualiza total
+        # 4. Atualiza total da venda
         sale.total = total
         sale.save()
 
