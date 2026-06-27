@@ -109,6 +109,7 @@ class SaleSerializer(serializers.ModelSerializer):
 
             recipes = ProductIngredient.objects.filter(product=product)
 
+
             if product.uses_recipe:
                 for recipe in recipes:
                     ingredient = recipe.ingredient

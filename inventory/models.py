@@ -1,5 +1,7 @@
 from django.db import models
 
+from products.models import Product
+
 # Create your models here.
 class Ingredient(models.Model):
     name = models.CharField(max_length=100)
@@ -41,10 +43,9 @@ class Ingredient(models.Model):
         return self.name
     
 
-class ProductIngredient(models.Model):    
-
+class ProductIngredient(models.Model):
     product = models.ForeignKey(
-        "products.Product",
+        Product,
         on_delete=models.CASCADE,
         related_name="recipe"
     )
@@ -52,15 +53,18 @@ class ProductIngredient(models.Model):
     ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.PROTECT
-        )
-    
-    quantity = models.DecimalField(
-         max_digits=10,
-         decimal_places=3
     )
 
+    quantity = models.DecimalField(
+        max_digits=10,
+        decimal_places=3
+    )
+
+    class Meta:
+        unique_together = ("product", "ingredient")
+
     def __str__(self):
-            return f"{self.product.name} - {self.ingredient.name}"
+        return f"{self.product.name} - {self.ingredient.name}"
 
 class StockEntry(models.Model):
     ingredient = models.ForeignKey(
