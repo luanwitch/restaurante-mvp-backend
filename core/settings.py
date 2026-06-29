@@ -47,6 +47,7 @@ INSTALLED_APPS = [
       # libs
     'rest_framework',
     'corsheaders',
+    
 
      # apps do projeto
     'products',
@@ -138,11 +139,18 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 CORS_ALLOWED_ORIGINS = [
+    "https://gleeful-gastro-gestor-nereu1.luanvwittchind.workers.dev",
+    "https://gleeful-gastro-gestor1.luanvwittchind.workers.dev",
     "http://localhost:8080",
     "http://127.0.0.1:8080",
     "http://192.168.0.5:8080",
     "https://gleeful-gastro-gestor1.luanvwittchind.workers.dev",
    
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://gleeful-gastro-gestor-nereu1.luanvwittchind.workers.dev",
+    "https://gleeful-gastro-gestor1.luanvwittchind.workers.dev",
 ]
 
 REST_FRAMEWORK = {
